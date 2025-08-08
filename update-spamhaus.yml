@@ -1,0 +1,55 @@
+name: Actualizar IPs de Spamhaus
+
+on:
+  schedule:
+    # Ejecutar diariamente a las 6:00 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Permite ejecutar manualmente
+
+jobs:
+  update-spamhaus:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Descargar y procesar IPs de Spamhaus
+      run: |
+        # Crear archivo temporal
+        > temp_lista.txt
+        
+        # Descargar diferentes listas de Spamhaus
+        # SBL (Spamhaus Block List)
+        curl -s "https://www.spamhaus.org/drop/drop.txt" | grep -E '^[0-9]' | cut -d' ' -f1 | while read ip; do
+          echo "||${ip}^" >> temp_lista.txt
+        done
+        
+        # EDROP (Extended DROP)
+        curl -s "https://www.spamhaus.org/drop/edrop.txt" | grep -E '^[0-9]' | cut -d' ' -f1 | while read ip; do
+          echo "||${ip}^" >> temp_lista.txt
+        done
+        
+        # Eliminar duplicados y ordenar
+        sort temp_lista.txt | uniq > lista.txt
+        rm temp_lista.txt
+        
+        echo "Total de IPs procesadas: $(wc -l < lista.txt)"
+    
+    - name: Verificar cambios
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Commit y push cambios
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add lista.txt
+        git commit -m "Actualizar lista de IPs de Spamhaus - $(date '+%Y-%m-%d %H:%M:%S')"
+        git push
