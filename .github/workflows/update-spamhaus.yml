@@ -22,12 +22,12 @@ jobs:
         # Descargar diferentes listas de Spamhaus
         # SBL (Spamhaus Block List)
         curl -s "https://www.spamhaus.org/drop/drop.txt" | grep -E '^[0-9]' | cut -d' ' -f1 | while read ip; do
-          echo "||${ip}^" >> temp_lista.txt
+          echo "${ip}" >> temp_lista.txt
         done
         
         # EDROP (Extended DROP)
         curl -s "https://www.spamhaus.org/drop/edrop.txt" | grep -E '^[0-9]' | cut -d' ' -f1 | while read ip; do
-          echo "||${ip}^" >> temp_lista.txt
+          echo "${ip}" >> temp_lista.txt
         done
         
         # Eliminar duplicados y ordenar
