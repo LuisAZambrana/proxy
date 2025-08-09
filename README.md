@@ -3,7 +3,7 @@ Listado de Ips y dominios para filtrar
 
 ## Archivo lista.txt
 
-*Este archivo se actualiza automaticamente una vez por día obteniendo el listado oficial de spamhause*  
+*Este archivo se actualiza automaticamente una vez por día obteniendo el listado oficial de spamhause combinado con emergingthreats, abuse.ch y cinsscore.com/* 
 
 ## radiosysitios.txt
 
