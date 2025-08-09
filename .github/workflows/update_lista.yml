@@ -28,10 +28,11 @@ jobs:
       - name: Combinar listas con la actual
         run: |
           echo "Generando lista unificada..."
-          cat lista.txt > listas/todas.txt
-          cat listas/*.txt >> listas/todas.txt
-          grep -v '^#' listas/todas.txt | grep -v '^\s*$' > listas/filtradas.txt
-          sort -u listas/filtradas.txt > lista.txt
+          mkdir -p tmp
+          cp lista.txt tmp/original.txt
+          cat tmp/original.txt listas/*.txt > tmp/todas.txt
+          grep -v '^#' tmp/todas.txt | grep -v '^\s*$' > tmp/filtradas.txt
+          sort -u tmp/filtradas.txt > lista.txt
           echo "Tamaño final de lista:"
           wc -l lista.txt
 
