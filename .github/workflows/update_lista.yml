@@ -1,9 +1,9 @@
 name: Actualizar lista unificada de IPs bloqueadas
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "0 3 * * *" # Todos los días a las 03:00 UTC
-  workflow_dispatch: # Permite ejecución manual
+    - cron: "0 3 * * *"
 
 jobs:
   update-lista:
@@ -24,12 +24,14 @@ jobs:
 
       - name: Combinar listas con la actual
         run: |
+          echo "Tamaño de lista actual:"
+          wc -l lista.txt || true
           cat lista.txt > listas/todas.txt
           cat listas/*.txt >> listas/todas.txt
-          # Eliminar comentarios y líneas vacías
           grep -v '^#' listas/todas.txt | grep -v '^\s*$' > listas/filtradas.txt
-          # Quitar duplicados y ordenar
           sort -u listas/filtradas.txt > lista.txt
+          echo "Tamaño de nueva lista:"
+          wc -l lista.txt
 
       - name: Configurar Git
         run: |
@@ -39,5 +41,5 @@ jobs:
       - name: Commit y push si hay cambios
         run: |
           git add lista.txt
-          git commit -m "Actualización diaria de lista unificada de IPs bloqueadas" || echo "Sin cambios"
+          git diff --staged --quiet || git commit -m "Actualización diaria de lista unificada de IPs bloqueadas"
           git push
