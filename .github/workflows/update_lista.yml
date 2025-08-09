@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: "0 3 * * *"
 
+permissions:
+  contents: write
+
 jobs:
   update-lista:
     runs-on: ubuntu-latest
@@ -15,7 +18,7 @@ jobs:
 
       - name: Descargar listas públicas
         run: |
-          mkdir listas
+          mkdir -p listas
           curl -s https://www.spamhaus.org/drop/drop.txt -o listas/spamhaus_drop.txt
           curl -s https://www.spamhaus.org/drop/edrop.txt -o listas/spamhaus_edrop.txt
           curl -s https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt -o listas/emerging_block_ips.txt
@@ -24,13 +27,12 @@ jobs:
 
       - name: Combinar listas con la actual
         run: |
-          echo "Tamaño de lista actual:"
-          wc -l lista.txt || true
+          echo "Generando lista unificada..."
           cat lista.txt > listas/todas.txt
           cat listas/*.txt >> listas/todas.txt
           grep -v '^#' listas/todas.txt | grep -v '^\s*$' > listas/filtradas.txt
           sort -u listas/filtradas.txt > lista.txt
-          echo "Tamaño de nueva lista:"
+          echo "Tamaño final de lista:"
           wc -l lista.txt
 
       - name: Configurar Git
@@ -41,5 +43,5 @@ jobs:
       - name: Commit y push si hay cambios
         run: |
           git add lista.txt
-          git diff --staged --quiet || git commit -m "Actualización diaria de lista unificada de IPs bloqueadas"
+          git commit -m "Actualización diaria de lista unificada de IPs bloqueadas" || echo "Sin cambios"
           git push
