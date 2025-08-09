@@ -1,0 +1,43 @@
+name: Actualizar lista unificada de IPs bloqueadas
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # Todos los días a las 03:00 UTC
+  workflow_dispatch: # Permite ejecución manual
+
+jobs:
+  update-lista:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Descargar listas públicas
+        run: |
+          mkdir listas
+          curl -s https://www.spamhaus.org/drop/drop.txt -o listas/spamhaus_drop.txt
+          curl -s https://www.spamhaus.org/drop/edrop.txt -o listas/spamhaus_edrop.txt
+          curl -s https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt -o listas/emerging_block_ips.txt
+          curl -s https://feodotracker.abuse.ch/downloads/ipblocklist.txt -o listas/feodo_blocklist.txt
+          curl -s https://cinsscore.com/list/ci-badguys.txt -o listas/ci_badguys.txt
+
+      - name: Combinar listas con la actual
+        run: |
+          cat lista.txt > listas/todas.txt
+          cat listas/*.txt >> listas/todas.txt
+          # Eliminar comentarios y líneas vacías
+          grep -v '^#' listas/todas.txt | grep -v '^\s*$' > listas/filtradas.txt
+          # Quitar duplicados y ordenar
+          sort -u listas/filtradas.txt > lista.txt
+
+      - name: Configurar Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit y push si hay cambios
+        run: |
+          git add lista.txt
+          git commit -m "Actualización diaria de lista unificada de IPs bloqueadas" || echo "Sin cambios"
+          git push
